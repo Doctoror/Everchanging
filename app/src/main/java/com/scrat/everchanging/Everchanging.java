@@ -6,11 +6,15 @@ import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import com.doctoror.particlesdrawable.opengl.chooser.FailsafeMultisamplingConfigChooser;
 import com.scrat.everchanging.scheduler.FrameScheduler;
+
+import java.util.Arrays;
 
 public final class Everchanging extends WallpaperService {
 
@@ -41,6 +45,12 @@ public final class Everchanging extends WallpaperService {
 
             WallpaperGLSurfaceView(final Context context) {
                 super(context);
+                setEGLConfigChooser(new FailsafeMultisamplingConfigChooser(4, configSpec -> {
+                    Log.d(
+                            "WallpaperGLSurfaceView",
+                            "EGLConfig chosen: " + Arrays.toString(configSpec)
+                    );
+                }));
             }
 
             @Override
