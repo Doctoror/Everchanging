@@ -1,8 +1,13 @@
 package com.scrat.everchanging;
 
+import static android.opengl.GLES20.GL_COLOR_ATTACHMENT0;
+import static android.opengl.GLES20.GL_FRAMEBUFFER;
+import static android.opengl.GLES20.GL_TEXTURE_2D;
+
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
@@ -14,6 +19,7 @@ import android.view.SurfaceHolder;
 import com.doctoror.particlesdrawable.opengl.chooser.FailsafeMultisamplingConfigChooser;
 import com.scrat.everchanging.scheduler.FrameScheduler;
 
+import java.nio.IntBuffer;
 import java.util.Arrays;
 
 public final class Everchanging extends WallpaperService {
@@ -51,6 +57,7 @@ public final class Everchanging extends WallpaperService {
                             "EGLConfig chosen: " + Arrays.toString(configSpec)
                     );
                 }));
+
             }
 
             @Override

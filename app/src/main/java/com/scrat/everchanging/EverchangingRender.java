@@ -241,7 +241,7 @@ final class EverchangingRender implements GLSurfaceView.Renderer {
         // Reset last scene FPS. New scene FPS will be recalculated below
         lastSceneMaxFps = Scene.MINIMUM_FPS;
 
-        final Scene.ShortTypes currentScene = getAnim();
+        final Scene.ShortTypes currentScene = D;
         final int scenesSize = scenes.size();
         for (int i = 0; i < scenesSize; i++) {
             final Scene scene = scenes.get(i);

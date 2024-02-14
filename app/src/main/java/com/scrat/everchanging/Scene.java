@@ -1,6 +1,12 @@
 package com.scrat.everchanging;
 
+import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
+import static android.opengl.GLES20.GL_NEAREST;
+import static android.opengl.GLES30.GL_DRAW_FRAMEBUFFER;
+import static android.opengl.GLES30.GL_READ_FRAMEBUFFER;
+
 import android.opengl.GLES20;
+import android.opengl.GLES32;
 import android.opengl.Matrix;
 
 import com.scrat.everchanging.util.ReusableIterator;
@@ -63,7 +69,8 @@ public abstract class Scene {
         while (iterator.hasNext()) {
             final Object subObject = iterator.next();
             //Биндим картинку
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, subObject.texture.textureID);
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, subObject.texture.framebufferId); // TODO not sure
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, subObject.texture.textureID); // TODO not sure
             //Активируем позиционирование, что бы это нибыло
 
             //Запихуеваем в шейдер на это позионирование координаты прямоугольника
@@ -93,6 +100,11 @@ public abstract class Scene {
             // выглядеть изнутри. По этому сделаем расчет в шейдере.
 
             //Все посчитали, передали. Теперь рендерим треугольники согласно буфферу описания вершин треугольников
+
+            GLES20.glBindFramebuffer(GL_READ_FRAMEBUFFER, subObject.texture.framebufferId);
+            GLES20.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, subObject.texture.renderbufferId);
+            GLES32.glBlitFramebuffer(0, 0, (int) subObject.texture.width, (int) subObject.texture.height, 0, 0, (int) subObject.texture.width, (int) subObject.texture.height,
+                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
             GLES20.glDrawElements(GLES20.GL_TRIANGLES, object.indices.length, GLES20.GL_UNSIGNED_SHORT, object.drawListBuffer);
             //Выключаем позиционирование, что бы это нибыло

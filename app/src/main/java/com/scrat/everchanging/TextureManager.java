@@ -1,5 +1,7 @@
 package com.scrat.everchanging;
 
+import static javax.microedition.khronos.opengles.GL11ExtensionPack.GL_RGBA8;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -7,16 +9,22 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
 import android.opengl.GLES20;
+import android.opengl.GLES32;
 import android.opengl.GLUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
+// TODO https://stackoverflow.com/questions/46535341/opengl-msaa-in-2-different-ways-what-are-the-differences
+// TODO https://stackoverflow.com/questions/47173597/multisampled-fbos-in-opengl-es-3-0
+// TODO https://stackoverflow.com/questions/49004167/multisampling-with-glblitframebuffer-not-working-opengl-es-3-0
 final class TextureManager {
 
     static class Texture {
         public float[] pivot = {0.0f, 0.0f};
         public float width;
         public float height;
+        public int framebufferId;
+        public int renderbufferId;
         public int textureID;
         public int textureResId;
     }
@@ -25,6 +33,8 @@ final class TextureManager {
     private final Context context;
 
     private final int[] texturesIDs;
+    private final int[] framebuffers;
+    private final int[] renderbuffers;
 
     float dipToPixels(final float dipValue) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
@@ -62,6 +72,12 @@ final class TextureManager {
             }
         }
 
+        framebuffers = new int[texturesCount];
+        GLES20.glGenFramebuffers(framebuffers.length, framebuffers, 0);
+
+        renderbuffers = new int[texturesCount];
+        GLES20.glGenRenderbuffers(renderbuffers.length, renderbuffers, 0);
+
         texturesIDs = new int[texturesCount];
         textures = new Texture[texturesCount];
         GLES20.glGenTextures(texturesCount, texturesIDs, 0);
@@ -74,6 +90,8 @@ final class TextureManager {
             final int textureID = texturesIDs[i];
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureID);
             textures[counter] = new Texture();
+            textures[counter].framebufferId = framebuffers[i];
+            textures[counter].renderbufferId = renderbuffers[i];
             textures[counter].textureID = textureID;
             textures[counter].textureResId = bothTextureResIdsList[counter];
 
@@ -106,6 +124,16 @@ final class TextureManager {
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[i]);
+            GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderbuffers[i]);
+            GLES32.glRenderbufferStorageMultisample(GLES20.GL_RENDERBUFFER, 2, GL_RGBA8, (int) textures[counter].width, (int) textures[counter].height);
+            GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_RENDERBUFFER, textures[counter].renderbufferId);
+            GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D,
+                    textureID, 0);
+            System.out.println("FRAMEBUFFER: " + GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER));
+
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
             counter++;
         }
     }
